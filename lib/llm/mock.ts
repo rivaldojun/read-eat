@@ -55,7 +55,7 @@ export function mockDraftVariants(input: MockDraftInput): {
 } {
   const focus = input.pain || input.title || "your job search";
   return {
-    variantA: `Reading your post — "${(input.title ?? focus).slice(0, 80)}" — the pattern usually comes down to two things: keyword alignment with the job description and whether the layout parses cleanly. Two quick checks: mirror the posting's hard skills in your most recent bullets, and drop multi-column/table layouts that ATS often mangle. If useful, this free scanner flags those line by line, no signup: {{SCANNER_LINK}}`,
+    variantA: `Reading your post about "${(input.title ?? focus).slice(0, 80)}", the pattern usually comes down to two things: keyword alignment with the job description and whether the layout parses cleanly. Two quick checks: mirror the posting's hard skills in your most recent bullets, and drop multi-column/table layouts that ATS often mangle. If useful, this free scanner flags those line by line, no signup: {{SCANNER_LINK}}`,
     variantB: `This is common and fixable. Highest-leverage moves: (1) echo the exact hard skills from the job description in your bullets, (2) single-column layout with standard headings so the parser reads it. Want a fast diagnostic of your ATS score + missing keywords? It's free and instant: {{SCANNER_LINK}}`,
   };
 }

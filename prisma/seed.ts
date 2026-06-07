@@ -182,7 +182,7 @@ async function main() {
         opportunityId: o.id,
         utmCampaign: o.id,
         includesLink: true,
-        variantA: `Quick read on your post — the symptoms you describe (no responses despite volume) usually point at two things: keyword alignment with the job description and parse-ability of the layout. A couple of concrete checks: 1) make sure your most recent role's bullets echo the exact terms from the postings you target, 2) drop multi-column layouts and text boxes, which many ATS mangle. If it helps, I built a free ATS scanner that flags exactly these issues line by line — no signup needed: ${link}`,
+        variantA: `Quick read on your post: the symptoms you describe (no responses despite volume) usually point at two things, keyword alignment with the job description and parse-ability of the layout. A couple of concrete checks: 1) make sure your most recent role's bullets echo the exact terms from the postings you target, 2) drop multi-column layouts and text boxes, which many ATS mangle. If it helps, I built a free ATS scanner that flags exactly these issues line by line, no signup needed: ${link}`,
         variantB: `This is a really common pattern and it's fixable. Two highest-leverage moves: (a) mirror the job description's hard skills in your bullets (ATS often ranks on keyword match), and (b) single-column, standard headings so the parser reads it cleanly. Want a fast diagnostic? This free scanner shows your ATS score + the missing keywords instantly: ${link}`,
       },
     });

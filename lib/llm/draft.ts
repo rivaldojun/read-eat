@@ -45,6 +45,23 @@ export function injectTrackedLink(text: string, trackedUrl: string): string {
   return t.replace(/\n{3,}/g, "\n\n").trim();
 }
 
+/**
+ * Remove long dashes (em "—", en "–", horizontal bar "―") — a common "written
+ * by AI" tell — replacing them with a comma, then tidying punctuation/spacing.
+ * Regular hyphens ("-", e.g. "career-change") are left untouched. Newlines are
+ * preserved.
+ */
+export function stripLongDashes(text: string): string {
+  return text
+    .replace(/[ \t]*[—–―][ \t]*/g, ", ")
+    .replace(/[ \t]+,/g, ",")
+    .replace(/,\s*,/g, ",")
+    .replace(/,\s*([.!?])/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
+
 const DRAFT_SYSTEM = `You are the founder of FutuRole replying as a genuinely helpful peer in an online community (e.g. Reddit). Your goal is to actually help a job seeker, building goodwill — NOT to sell.
 
 Hard rules:
@@ -53,6 +70,7 @@ Hard rules:
 - No generic copy-paste: reference their specific situation/persona/pain.
 - At most ONE link, and only via the EXACT placeholder ${SCANNER_PLACEHOLDER} used once, as a soft optional offer near the end (e.g. "if it helps, this free scanner..."). Do NOT write any real URL yourself.
 - Keep each variant concise (about 60-110 words).
+- Do NOT use em dashes or en dashes ("—", "–"). Use commas, periods, or parentheses instead. Plain hyphens in compound words are fine.
 
 Return ONLY a JSON object (no markdown, no code fences) with exactly:
 {"variantA": "<reply text with ${SCANNER_PLACEHOLDER} once>", "variantB": "<a meaningfully different angle, also with ${SCANNER_PLACEHOLDER} once>"}`;
@@ -153,8 +171,8 @@ export async function runDrafts(limit = 15): Promise<DraftSummary> {
       });
 
       const raw = await generateRawVariants(opp, diagnostic);
-      const variantA = injectTrackedLink(raw.variantA, trackedUrl);
-      const variantB = injectTrackedLink(raw.variantB, trackedUrl);
+      const variantA = stripLongDashes(injectTrackedLink(raw.variantA, trackedUrl));
+      const variantB = stripLongDashes(injectTrackedLink(raw.variantB, trackedUrl));
 
       await prisma.$transaction([
         prisma.draft.create({
