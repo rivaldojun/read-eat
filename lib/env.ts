@@ -64,6 +64,8 @@ const envSchema = z.object({
   TRIAGE_SCORE_THRESHOLD: z.coerce.number().int().min(0).max(100).default(70),
   // Anti-ban guardrail: minimum ratio of helpful replies per link-bearing reply.
   HELPFUL_TO_LINK_RATIO: z.coerce.number().int().min(1).default(9),
+  // Anti-ban guardrail: max posts/day before a "non-human pace" warning.
+  DAILY_POST_LIMIT: z.coerce.number().int().min(1).default(12),
   // intentScore at/above which an instant Telegram alert fires.
   HOT_LEAD_THRESHOLD: z.coerce.number().int().min(0).max(100).default(90),
   // Public base URL of the free FutuRole ATS scanner (link target in drafts).

@@ -10,9 +10,13 @@ export interface GuardrailStatus {
   date: string;
   postsWithLink: number;
   postsHelpful: number;
+  totalPosts: number;
   ratioTarget: number;
+  dailyLimit: number;
   /** True if posting another link would still respect the ratio. */
   withinLimit: boolean;
+  /** True if today's total post count is at/over the human-pace limit. */
+  paceWarning: boolean;
   /** Helpful (no-link) replies still recommended before the next link reply. */
   recommendedHelpfulBeforeNextLink: number;
 }
@@ -33,7 +37,9 @@ export async function getGuardrailStatus(
 
   const postsWithLink = row?.postsWithLink ?? 0;
   const postsHelpful = row?.postsHelpful ?? 0;
+  const totalPosts = postsWithLink + postsHelpful;
   const ratioTarget = env.HELPFUL_TO_LINK_RATIO;
+  const dailyLimit = env.DAILY_POST_LIMIT;
 
   // Posting one more link requires (postsWithLink + 1) * ratio helpful replies.
   const requiredForNextLink = (postsWithLink + 1) * ratioTarget;
@@ -43,8 +49,11 @@ export async function getGuardrailStatus(
     date: date.toISOString().slice(0, 10),
     postsWithLink,
     postsHelpful,
+    totalPosts,
     ratioTarget,
+    dailyLimit,
     withinLimit,
+    paceWarning: totalPosts >= dailyLimit,
     recommendedHelpfulBeforeNextLink: Math.max(
       0,
       requiredForNextLink - postsHelpful,
