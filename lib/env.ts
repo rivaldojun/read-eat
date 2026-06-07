@@ -21,6 +21,15 @@ const envSchema = z.object({
 
   // LLM
   GEMINI_API_KEY: optionalString,
+  // Fast model for triage, stronger model for drafting (overridable per key access).
+  GEMINI_TRIAGE_MODEL: z.preprocess(
+    (v) => (v === "" || v === undefined ? "gemini-2.0-flash" : v),
+    z.string(),
+  ),
+  GEMINI_DRAFT_MODEL: z.preprocess(
+    (v) => (v === "" || v === undefined ? "gemini-2.5-pro" : v),
+    z.string(),
+  ),
 
   // Reddit (snoowrap)
   REDDIT_CLIENT_ID: optionalString,
@@ -48,6 +57,8 @@ const envSchema = z.object({
   CRON_SECRET: optionalString,
   // Dev-only: when "true", the radar uses local fixtures instead of live Reddit.
   RADAR_MOCK: optionalString,
+  // Dev-only: when "true", LLM triage/draft use deterministic heuristics (no Gemini).
+  LLM_MOCK: optionalString,
 
   // Tunables
   TRIAGE_SCORE_THRESHOLD: z.coerce.number().int().min(0).max(100).default(70),

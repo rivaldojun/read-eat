@@ -51,3 +51,6 @@ export class RateLimiter {
 
 /** Shared limiter for Reddit reads (~60 req/min, brief §6). */
 export const redditLimiter = new RateLimiter(60, 60_000, 250);
+
+/** Shared limiter for Gemini calls (conservative free-tier friendly default). */
+export const geminiLimiter = new RateLimiter(15, 60_000, 250);
