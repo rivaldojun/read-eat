@@ -8,6 +8,7 @@ import { geminiLimiter } from "@/lib/rate-limit";
 import { generateJson } from "@/lib/llm/gemini";
 import { extractJsonObject } from "@/lib/llm/json";
 import { mockTriageRaw } from "@/lib/llm/mock";
+import { notifyHotLead } from "@/lib/notify/telegram";
 
 export const PERSONAS = ["junior", "senior", "career-change", "unknown"] as const;
 
@@ -166,6 +167,23 @@ export async function runTriage(limit = 25): Promise<TriageSummary> {
         score: result.intentScore,
         status: passes ? "TRIAGED" : "SKIPPED",
       });
+
+      // Instant Telegram alert for hot leads (best-effort, never blocks triage).
+      if (passes && result.intentScore >= env.HOT_LEAD_THRESHOLD) {
+        try {
+          await notifyHotLead({
+            title: opp.title,
+            intentScore: result.intentScore,
+            permalink: opp.permalink,
+            persona: result.persona === "unknown" ? null : result.persona,
+          });
+        } catch (err) {
+          log.warn("triage", "hot-lead alert failed", {
+            id: opp.id,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
     } catch (err) {
       summary.failed++;
       log.error("triage", "opportunity failed", {

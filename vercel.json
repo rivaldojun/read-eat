@@ -4,6 +4,7 @@
     { "path": "/api/cron/radar", "schedule": "0 */2 * * *" },
     { "path": "/api/cron/triage", "schedule": "15 */2 * * *" },
     { "path": "/api/cron/draft", "schedule": "30 */2 * * *" },
-    { "path": "/api/cron/attribution", "schedule": "0 */6 * * *" }
+    { "path": "/api/cron/attribution", "schedule": "0 */6 * * *" },
+    { "path": "/api/cron/summary", "schedule": "0 8 * * *" }
   ]
 }
