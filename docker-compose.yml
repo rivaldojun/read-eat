@@ -1,0 +1,28 @@
+# Local PostgreSQL for development.
+# Usage:
+#   docker compose up -d
+#   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/futurole_growth?schema=public"
+#
+# No Docker? See the README ("Local DB without Docker") for a native Postgres
+# alternative (initdb on a custom port).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: futurole_growth_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: futurole_growth
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d futurole_growth"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

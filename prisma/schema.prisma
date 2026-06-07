@@ -1,0 +1,108 @@
+// FutuRole Growth Copilot — data model.
+// Mirrors the model specified in the project brief (section 5), with a few
+// non-breaking indexes added for the inbox/analytics query patterns.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Source {
+  id            String        @id @default(cuid())
+  type          SourceType // REDDIT | DISCORD
+  name          String // e.g. "r/resumes"
+  keywords      String[] // keywords to match
+  enabled       Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  opportunities Opportunity[]
+
+  @@unique([type, name])
+}
+
+model Opportunity {
+  id          String    @id @default(cuid())
+  sourceId    String
+  source      Source    @relation(fields: [sourceId], references: [id])
+  externalId  String    @unique // Reddit/Discord id (dedup)
+  permalink   String
+  author      String
+  title       String?
+  body        String
+  postedAt    DateTime
+  signals     String[] // matched keywords
+  intentScore Int? // 0-100, filled by triage
+  persona     String? // junior|senior|career-change
+  pain        String?
+  status      OppStatus @default(NEW) // NEW|TRIAGED|DRAFTED|APPROVED|POSTED|SKIPPED
+
+  draft       Draft?
+  postedReply PostedReply?
+  createdAt   DateTime     @default(now())
+
+  @@index([status, intentScore])
+  @@index([sourceId])
+}
+
+model Draft {
+  id            String      @id @default(cuid())
+  opportunityId String      @unique
+  opportunity   Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  variantA      String
+  variantB      String
+  includesLink  Boolean     @default(true)
+  utmCampaign   String // = opportunityId, injected into the link
+  createdAt     DateTime    @default(now())
+}
+
+model PostedReply {
+  id            String       @id @default(cuid())
+  opportunityId String       @unique
+  opportunity   Opportunity  @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  finalText     String
+  postedAt      DateTime     @default(now())
+  utmCampaign   String
+  clicks        Int          @default(0)
+  attribution   Attribution?
+
+  @@index([utmCampaign])
+}
+
+model Attribution {
+  id            String      @id @default(cuid())
+  postedReplyId String      @unique
+  postedReply   PostedReply @relation(fields: [postedReplyId], references: [id], onDelete: Cascade)
+  signups       Int         @default(0)
+  trials        Int         @default(0)
+  paidUsers     Int         @default(0)
+  mrrCents      Int         @default(0) // attributed MRR in cents
+  updatedAt     DateTime    @updatedAt
+}
+
+model AccountActivity {
+  // Anti-ban guardrail: one row per account per day.
+  id            String   @id @default(cuid())
+  accountName   String
+  date          DateTime @db.Date
+  postsWithLink Int      @default(0)
+  postsHelpful  Int      @default(0)
+
+  @@unique([accountName, date])
+}
+
+enum SourceType {
+  REDDIT
+  DISCORD
+}
+
+enum OppStatus {
+  NEW
+  TRIAGED
+  DRAFTED
+  APPROVED
+  POSTED
+  SKIPPED
+}
