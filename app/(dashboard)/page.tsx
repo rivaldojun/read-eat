@@ -4,9 +4,11 @@ import { ArrowRight, ShieldCheck, ShieldAlert } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { OppStatus } from "@prisma/client";
 import { getGuardrailStatus } from "@/lib/guardrail";
+import { getGlobalFunnel, getFunnelBySource } from "@/lib/queries/attribution";
 import { formatMoneyCents } from "@/lib/format";
 import { RunRadarButton } from "@/components/run-radar-button";
 import { StatCard } from "@/components/stat-card";
+import { FunnelTable } from "@/components/funnel-table";
 import {
   Card,
   CardContent,
@@ -29,17 +31,12 @@ const STATUS_ORDER: OppStatus[] = [
 ];
 
 export default async function DashboardPage() {
-  const [grouped, enabledSources, attribution, clicks, guardrail] =
+  const [grouped, enabledSources, funnel, bySource, guardrail] =
     await Promise.all([
-      prisma.opportunity.groupBy({
-        by: ["status"],
-        _count: { _all: true },
-      }),
+      prisma.opportunity.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.source.count({ where: { enabled: true } }),
-      prisma.attribution.aggregate({
-        _sum: { signups: true, trials: true, paidUsers: true, mrrCents: true },
-      }),
-      prisma.postedReply.aggregate({ _sum: { clicks: true } }),
+      getGlobalFunnel(),
+      getFunnelBySource(),
       getGuardrailStatus(),
     ]);
 
@@ -47,8 +44,6 @@ export default async function DashboardPage() {
     grouped.map((g) => [g.status, g._count._all]),
   );
   const count = (s: OppStatus) => counts.get(s) ?? 0;
-
-  const sums = attribution._sum;
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
@@ -81,15 +76,30 @@ export default async function DashboardPage() {
           Attributed revenue
         </h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <StatCard label="Clicks" value={clicks._sum.clicks ?? 0} />
-          <StatCard label="Signups" value={sums.signups ?? 0} />
-          <StatCard label="Paying users" value={sums.paidUsers ?? 0} />
+          <StatCard label="Clicks" value={funnel.clicks} />
+          <StatCard label="Signups" value={funnel.signups} />
+          <StatCard label="Paying users" value={funnel.paidUsers} />
           <StatCard
             label="MRR"
-            value={formatMoneyCents(sums.mrrCents ?? 0)}
-            hint={`${sums.trials ?? 0} trials in flight`}
+            value={formatMoneyCents(funnel.mrrCents)}
+            hint={`${funnel.trials} trials in flight`}
           />
         </div>
+      </section>
+
+      {/* Revenue by source */}
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Revenue by source</CardTitle>
+            <CardDescription>
+              Which communities actually turn into cash.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FunnelTable rows={bySource} />
+          </CardContent>
+        </Card>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-2">
